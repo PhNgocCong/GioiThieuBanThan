@@ -18,13 +18,25 @@ pipeline {
             steps {
                 echo '===== CHECK WEBSITE ====='
 
-                bat '''
-                    if not exist index.html (
-                        echo ERROR: index.html not found
-                        exit /b 1
-                    )
+                sh '''
+                    if [ ! -f index.html ]; then
+                        echo "ERROR: index.html not found"
+                        exit 1
+                    fi
 
-                    echo index.html found successfully
+                    echo "index.html found successfully"
+                '''
+            }
+        }
+
+        stage('Check Node') {
+            steps {
+                echo '===== CHECK NODE.JS ====='
+
+                sh '''
+                    node -v
+                    npm -v
+                    npx --version
                 '''
             }
         }
@@ -33,8 +45,8 @@ pipeline {
             steps {
                 echo '===== DEPLOY TO VERCEL ====='
 
-                bat '''
-                    npx vercel deploy --prod --token "%VERCEL_TOKEN%" --yes
+                sh '''
+                    npx vercel deploy --prod --token "$VERCEL_TOKEN" --yes
                 '''
             }
         }
