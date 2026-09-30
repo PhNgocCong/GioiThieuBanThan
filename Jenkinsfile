@@ -52,7 +52,7 @@ pipeline {
                 sh """
                     curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
                     -d "chat_id=${TELEGRAM_CHAT_ID}" \
-                    -d "text=✅ Deploy thành công%0ARepository: ${REPO_NAME}%0ABranch: ${BRANCH_NAME}%0AWebsite: https://${VERCEL_PROJECT_NAME}.vercel.app"
+                    -d "text=✅ Deploy thành công%0ARepository: ${REPO_NAME}%0ABranch: ${BRANCH_NAME}%0AWebsite: https://gioi-thieu-ban-than-six.vercel.app"
                 """
             }
         }
