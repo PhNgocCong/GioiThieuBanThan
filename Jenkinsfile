@@ -7,13 +7,6 @@ pipeline {
 
     stages {
 
-        stage('Checkout') {
-            steps {
-                echo '===== CHECKOUT GITHUB ====='
-                checkout scm
-            }
-        }
-
         stage('Check Website') {
             steps {
                 echo '===== CHECK WEBSITE ====='
@@ -29,14 +22,35 @@ pipeline {
             }
         }
 
-        stage('Check Node') {
+        stage('Check Node.js') {
             steps {
                 echo '===== CHECK NODE.JS ====='
 
                 sh '''
+                    echo "Node.js:"
                     node -v
+
+                    echo "npm:"
                     npm -v
+
+                    echo "npx:"
                     npx --version
+                '''
+            }
+        }
+
+        stage('Check Vercel Token') {
+            steps {
+                echo '===== CHECK VERCEL TOKEN ====='
+
+                sh '''
+                    if [ -z "$VERCEL_TOKEN" ]; then
+                        echo "ERROR: VERCEL_TOKEN is empty"
+                        exit 1
+                    fi
+
+                    echo "Vercel token is available"
+                    echo "Token length: ${#VERCEL_TOKEN}"
                 '''
             }
         }
@@ -46,7 +60,10 @@ pipeline {
                 echo '===== DEPLOY TO VERCEL ====='
 
                 sh '''
-                    npx vercel deploy --prod --token "$VERCEL_TOKEN" --yes
+                    npx vercel deploy \
+                        --prod \
+                        --token "$VERCEL_TOKEN" \
+                        --yes
                 '''
             }
         }
@@ -54,13 +71,17 @@ pipeline {
 
     post {
         success {
-            echo '===== DEPLOY SUCCESS ====='
+            echo '===================================='
+            echo '       DEPLOY SUCCESS'
+            echo '===================================='
             echo 'Website deployed successfully!'
         }
 
         failure {
-            echo '===== DEPLOY FAILED ====='
-            echo 'Please check Jenkins Console Output.'
+            echo '===================================='
+            echo '       DEPLOY FAILED'
+            echo '===================================='
+            echo 'Please check the failed stage above.'
         }
     }
 }
