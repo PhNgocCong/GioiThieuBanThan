@@ -3,6 +3,8 @@ pipeline {
 
     environment {
         VERCEL_TOKEN = credentials('vercel-token')
+        VERCEL_ORG_ID = 'team_wkzwr9dUQiqed0JN8e8Iul4s'
+        VERCEL_PROJECT_ID = 'prj_LyOD4Ks52FnImUfN2ZSGIPO9rlUp'
     }
 
     stages {
@@ -27,13 +29,8 @@ pipeline {
                 echo '===== CHECK NODE.JS ====='
 
                 sh '''
-                    echo "Node.js:"
                     node -v
-
-                    echo "npm:"
                     npm -v
-
-                    echo "npx:"
                     npx --version
                 '''
             }
@@ -49,7 +46,7 @@ pipeline {
                         exit 1
                     fi
 
-                    echo "Vercel token is available"
+                    echo "Vercel token exists"
                     echo "Token length: ${#VERCEL_TOKEN}"
                 '''
             }
@@ -63,7 +60,9 @@ pipeline {
                     npx vercel deploy \
                         --prod \
                         --token "$VERCEL_TOKEN" \
-                        --yes
+                        --yes \
+                        --scope ngoc-cong \
+                        --project "$VERCEL_PROJECT_ID"
                 '''
             }
         }
@@ -74,14 +73,14 @@ pipeline {
             echo '===================================='
             echo '       DEPLOY SUCCESS'
             echo '===================================='
-            echo 'Website deployed successfully!'
+            echo 'Website: https://gioi-thieu-ban-than-six.vercel.app'
         }
 
         failure {
             echo '===================================='
             echo '       DEPLOY FAILED'
             echo '===================================='
-            echo 'Please check the failed stage above.'
+            echo 'Please check the Console Output.'
         }
     }
 }
