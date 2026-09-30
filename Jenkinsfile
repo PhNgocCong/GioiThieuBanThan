@@ -2,74 +2,69 @@ pipeline {
     agent any
 
     environment {
-        VERCEL_TOKEN = credentials('vercel-token')
+        VERCEL_TOKEN = credentials('VERCEL_TOKEN')
+        TELEGRAM_BOT_TOKEN = credentials('TELEGRAM_BOT_TOKEN')
+        TELEGRAM_CHAT_ID = credentials('TELEGRAM_CHAT_ID')
+        REPO_NAME = "GioiThieuBanThan" 
+        VERCEL_PROJECT_NAME = "gioi-thieu-ban-than" // Tên viết thường để sửa lỗi Vercel
+        BRANCH_NAME = "main"
     }
 
     stages {
-
-        stage('Checkout') {
+        stage('Thông báo: Bắt đầu') {
             steps {
-                echo '===== CHECKOUT GITHUB ====='
+                script {
+                    def commitMsg = sh(script: "git log -1 --pretty=%B", returnStdout: true).trim()
+                    sh """
+                        curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+                        -d "chat_id=${TELEGRAM_CHAT_ID}" \
+                        -d "text=🚀 Bắt đầu deploy website%0ARepository: ${REPO_NAME}%0ABranch: ${BRANCH_NAME}%0ACommit: ${commitMsg}"
+                    """
+                }
+            }
+        }
+
+        stage('Checkout & Build') {
+            steps {
+                // Jenkins tự động checkout code từ GitHub
                 checkout scm
-            }
-        }
-
-        stage('Check Website') {
-            steps {
-                echo '===== CHECK WEBSITE ====='
-
-                sh '''
-                    if [ ! -f index.html ]; then
-                        echo "ERROR: index.html not found"
-                        exit 1
-                    fi
-
-                    echo "index.html found successfully"
-                '''
-            }
-        }
-
-        stage('Check Node') {
-            steps {
-                echo '===== CHECK NODE.JS ====='
-
-                sh '''
-                    node -v
-                    npm -v
-                    npx --version
-                '''
+                
+                // Nếu dự án của bạn CÓ dùng Node.js/React thì xóa dấu // ở 2 dòng dưới. 
+                // Nếu chỉ là HTML/CSS thuần thì cứ để nguyên dấu // như thế này.
+                // sh 'npm install'
+                // sh 'npm run build'
             }
         }
 
         stage('Deploy to Vercel') {
             steps {
-                echo '===== DEPLOY TO VERCEL ====='
-
-                sh '''
-                    npx vercel@latest deploy . \
-                      --prod \
-                      --token "$VERCEL_TOKEN" \
-                      --scope ngoc-cong \
-                      --yes
-                '''
+                script {
+                    // Thêm tham số --name để ép tên project thành chữ thường, khắc phục lỗi Vercel
+                    sh 'npx vercel --token ${VERCEL_TOKEN} --prod --yes --name ${VERCEL_PROJECT_NAME}'
+                }
             }
         }
     }
 
     post {
         success {
-            echo '================================'
-            echo '      DEPLOY SUCCESS'
-            echo '================================'
-            echo 'Website deployed successfully!'
-            echo 'https://gioi-thieu-ban-than-six.vercel.app'
+            script {
+                sh """
+                    curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+                    -d "chat_id=${TELEGRAM_CHAT_ID}" \
+                    -d "text=✅ Deploy thành công%0ARepository: ${REPO_NAME}%0ABranch: ${BRANCH_NAME}%0AWebsite: https://${VERCEL_PROJECT_NAME}.vercel.app"
+                """
+            }
         }
-
         failure {
-            echo '================================'
-            echo '       DEPLOY FAILED'
-            echo '================================'
-            echo 'Please check the Console Output.'
+            script {
+                def commitMsg = sh(script: "git log -1 --pretty=%B", returnStdout: true).trim()
+                sh """
+                    curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+                    -d "chat_id=${TELEGRAM_CHAT_ID}" \
+                    -d "text=❌ Deploy thất bại%0ARepository: ${REPO_NAME}%0ABranch: ${BRANCH_NAME}%0ACommit: ${commitMsg}%0AError: Kiểm tra log Jenkins để biết chi tiết."
+                """
+            }
         }
     }
 }
