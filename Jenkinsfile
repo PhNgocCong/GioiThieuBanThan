@@ -6,7 +6,7 @@ pipeline {
         TELEGRAM_BOT_TOKEN = credentials('TELEGRAM_BOT_TOKEN')
         TELEGRAM_CHAT_ID = credentials('TELEGRAM_CHAT_ID')
         REPO_NAME = "GioiThieuBanThan" 
-        VERCEL_PROJECT_NAME = "gioi-thieu-ban-than" // Tên viết thường để sửa lỗi Vercel
+        VERCEL_PROJECT_NAME = "gioi-thieu-ngoccong" // Tên viết thường để sửa lỗi Vercel
         BRANCH_NAME = "main"
     }
 
